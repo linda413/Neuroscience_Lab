@@ -32,7 +32,7 @@ if ischar(LFP)
     LFP = {LFP}
 end
 if nargin < 2
-    window_size_sec = 300;
+    window_size_sec = 1000;
 end
 if nargin < 3
     overwrite = 0;
@@ -65,9 +65,14 @@ for i_lfp = 1:length(LFP);
     TS{i_lfp} = LFP{i_lfp}.timestamps-LFP{i_lfp}.timestamps(1);
     values{i_lfp} = LFP{i_lfp}.values;
     badvals{i_lfp} = nan(size(LFP{i_lfp}.values));
+    brkpts{i_lfp} = nan(size(LFP{i_lfp}.values));
     try LFP{i_lfp}.bad_intervals;
     catch
         LFP{i_lfp}.bad_intervals = [1 2];
+    end
+    try LFP{i_lfp}.break_points;
+    catch
+        LFP{i_lfp}.break_points = [1 2];
     end
     if isempty(overwrite) || overwrite == 0;
         for i_interval = 1:size(LFP{i_lfp}.bad_intervals,1)
@@ -82,8 +87,17 @@ for i_lfp = 1:length(LFP);
                 floor(LFP{i_lfp}.bad_intervals(i_interval,1))...
                 :ceil(LFP{i_lfp}.bad_intervals(i_interval,2)));
         end
+        for i_interval = 1:size(LFP{i_lfp}.break_points,1)
+            brkpts{i_lfp}(...
+                floor(LFP{i_lfp}.break_points(i_interval,1))...
+                :ceil(LFP{i_lfp}.break_points(i_interval,2)))...
+                = LFP{i_lfp}.values(...
+                floor(LFP{i_lfp}.break_points(i_interval,1))...
+                :ceil(LFP{i_lfp}.break_points(i_interval,2)));        
+        end
     else
         LFP{i_lfp}.bad_intervals = [1 2];
+        LFP{i_lfp}.break_points = [1 2];
     end
 end
 point_jump = round(window_size_sec*LFP{1}.sFreq);
@@ -97,6 +111,8 @@ for figix = 1:length(LFP)
     plot(TS{figix}(ixis(i-1):ixis(i)),values{figix}(ixis(i-1):ixis(i)),'b')
     hold on
     plot(TS{figix}(ixis(i-1):ixis(i)),badvals{figix}(ixis(i-1):ixis(i)),'r')
+    hold on
+    plot(TS{figix}(ixis(i-1):ixis(i)),brkpts{figix}(ixis(i-1):ixis(i)),'g')
     hold on
     xlabel('Time (s)')
     ylabel({['Ch ' num2str(LFP{figix}.Channel)]; 'mV'})
@@ -126,6 +142,14 @@ m = uicontrol('style','pushbutton');
 set(m,'position',[241 21 120 20])
 set(m,'string','Mirror Axes')
 set(m,'callback',{@mirror,interf})
+bp = uicontrol('style','pushbutton');
+set(bp,'position',[362 21 120 20])
+set(bp,'string','Set Breaks')
+set(bp,'callback',{@set_breaks,interf})
+bf = uicontrol('style','pushbutton');
+set(bf,'position',[362 1 120 20])
+set(bf,'string','Split File')
+set(bf,'callback',{@split_file,interf})
 t = timer;
 t.TimerFcn = @active_color
 t.ExecutionMode = 'fixedRate';
@@ -133,6 +157,102 @@ t.Period = .25;
 t.ErrorFcn = @(~,~) beep
 start(t)
 linked = 0;
+    function split_file(bf,~,interf)
+        t_val = LFP{i_lfp}.values;
+        t_timestamps = LFP{i_lfp}.timestamps;
+        t_break_points = LFP{i_lfp}.break_points;
+        t_bad_intervals = LFP{i_lfp}.bad_intervals;
+        starting = 1;
+        ending = 0;
+        for idx = 2:length(LFP{i_lfp}.break_points)+1
+            if idx == length(LFP{i_lfp}.break_points)+1
+                ending = length(LFP{i_lfp}.timestamps);
+            else
+                ending = LFP{i_lfp}.break_points(idx,1);
+            end
+            LFP{i_lfp}.values = LFP{i_lfp}.values(starting:ending);
+            LFP{i_lfp}.timestamps = LFP{i_lfp}.timestamps(starting:ending);
+            LFP{i_lfp}.bad_intervals = [];
+            LFP{i_lfp}.break_points = [];
+                for sub_ix = 1:length(LFP)
+                    saveme = LFP{sub_ix};
+                    new_name = [LFP{sub_ix}.name(1:end-4) '_' num2str(idx-1) '.mat'];
+                    save([LFP_fullpath new_name],'-struct','saveme')
+                end
+            LFP{i_lfp}.values = t_val;
+            LFP{i_lfp}.timestamps = t_timestamps;
+            LFP{i_lfp}.bad_intervals = t_bad_intervals;
+            LFP{i_lfp}.break_points = t_break_points;
+            if idx <= length(LFP{i_lfp}.break_points)
+               starting = LFP{i_lfp}.break_points(idx,2);
+            end
+        end
+         msgbox('The file has been split.')
+    end
+    function set_breaks(bp,~,interf)
+        figure(interf)
+        old = hero == gca;
+        hold on
+        axes(hero(1));
+        title('Click first breakpoint')
+        axes(hero(old));
+        [xf(1),~] = ginput(1);
+        %x(1) = xf(1) +ixis(i-1);
+        for sub_ix = 1:length(LFP);
+            axes(hero(sub_ix));
+            [~, x(1)] = min(abs(TS{sub_ix}-xf(1)));
+            line([xf(1) xf(1)],ylim,'Color',[0 1 0])
+        end
+        axes(hero(1));
+        title('Click second breakpoint')
+        axes(hero(old));
+        [xf(2),~] = ginput(1);
+        for sub_ix = 1:length(LFP);
+            axes(hero(sub_ix));%x(2) = xf(2) +ixis(i-1);
+            [~, x(2)] = min(abs(TS{sub_ix}-xf(2)));
+            line([xf(2) xf(2)],ylim,'Color',[1 0 0])
+        end
+        axes(hero(1));
+        title('Right Click if OK')
+        axes(hero(old));
+        [~, ~, button] = ginput(1);
+        if button == 3;
+            for sub_ix = 1:length(LFP);
+                LFP{sub_ix}.break_points = [LFP{sub_ix}.break_points; x;];
+                LFP{sub_ix}.break_points(LFP{sub_ix}.break_points < 1) = 1;
+                LFP{sub_ix}.break_points(LFP{sub_ix}.break_points > length(LFP{sub_ix}.values)) = length(LFP{sub_ix}.values);
+            end
+        else
+            
+        end
+        for sub_ix = 1:length(LFP);
+            for i_interval = 1:size(LFP{sub_ix}.break_points,1)
+                values{sub_ix}(...
+                    floor(LFP{sub_ix}.break_points(i_interval,1))...
+                    :ceil(LFP{sub_ix}.break_points(i_interval,2)))...
+                    = NaN();
+                brkpts{sub_ix}(...
+                    floor(LFP{sub_ix}.break_points(i_interval,1))...
+                    :ceil(LFP{sub_ix}.break_points(i_interval,2)))...
+                    = LFP{sub_ix}.values(...
+                    floor(LFP{sub_ix}.break_points(i_interval,1))...
+                    :ceil(LFP{sub_ix}.break_points(i_interval,2)));
+            end
+            axes(hero(sub_ix));
+            hold off
+            plot(TS{sub_ix}(ixis(i-1):ixis(i)),values{sub_ix}(ixis(i-1):ixis(i)),'b')
+            hold on
+            plot(TS{sub_ix}(ixis(i-1):ixis(i)),badvals{sub_ix}(ixis(i-1):ixis(i)),'r')
+            hold on
+            plot(TS{sub_ix}(ixis(i-1):ixis(i)),brkpts{sub_ix}(ixis(i-1):ixis(i)),'g')
+            hold on
+            xlabel('Time (s)')
+     
+        ylabel({['Ch ' num2str(LFP{sub_ix}.Channel)]; 'mV'})
+        end
+        axes(hero(old));
+    end
+        
     function mirror(m,~,~)
         if linked == 0;
             linkaxes(hero);
@@ -191,6 +311,8 @@ linked = 0;
         hold on
         plot(TS{sub_ix}(ixis(i-1):ixis(i)),badvals{sub_ix}(ixis(i-1):ixis(i)),'r')
         hold on
+        plot(TS{sub_ix}(ixis(i-1):ixis(i)),brkpts{sub_ix}(ixis(i-1):ixis(i)),'g')
+        hold on
         xlabel('Time (s)')
         ylabel({['Ch ' num2str(LFP{sub_ix}.Channel)]; 'mV'})
     end
@@ -248,6 +370,8 @@ linked = 0;
             plot(TS{sub_ix}(ixis(i-1):ixis(i)),values{sub_ix}(ixis(i-1):ixis(i)),'b')
             hold on
             plot(TS{sub_ix}(ixis(i-1):ixis(i)),badvals{sub_ix}(ixis(i-1):ixis(i)),'r')
+            hold on
+            plot(TS{sub_ix}(ixis(i-1):ixis(i)),brkpts{sub_ix}(ixis(i-1):ixis(i)),'g')
             hold on
             xlabel('Time (s)')
      
