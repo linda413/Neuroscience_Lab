@@ -102,11 +102,12 @@ for i_lfp = 1:length(LFP);
 end
 point_jump = round(window_size_sec*LFP{1}.sFreq);
 
-ixis = [1:point_jump:length(LFP{1}.values) length(LFP{1}.values)];
+%ixis = [1:point_jump:length(LFP{1}.values) length(LFP{1}.values)];
 interf = figure;
 i = 2;
 figure(interf)
 for figix = 1:length(LFP)
+    ixis = [1:point_jump:length(LFP{figix}.values) length(LFP{figix}.values)];
     hero(figix) = subplot(length(LFP),1,figix)
     plot(TS{figix}(ixis(i-1):ixis(i)),values{figix}(ixis(i-1):ixis(i)),'b')
     hold on
@@ -164,16 +165,32 @@ linked = 0;
         t_bad_intervals = LFP{i_lfp}.bad_intervals;
         starting = 1;
         ending = 0;
+        n_bad_intervals = [];
         for idx = 2:length(LFP{i_lfp}.break_points)+1
             if idx == length(LFP{i_lfp}.break_points)+1
                 ending = length(LFP{i_lfp}.timestamps);
             else
                 ending = LFP{i_lfp}.break_points(idx,1);
             end
+            for indx = 1:length(LFP{i_lfp}.bad_intervals)
+                if LFP{i_lfp}.bad_intervals(indx,1) >= starting && LFP{i_lfp}.bad_intervals(indx,2) <= ending
+                    n_bad_intervals = [n_bad_intervals;LFP{i_lfp}.bad_intervals(indx,1)-starting+1 LFP{i_lfp}.bad_intervals(indx,2)-starting+1];
+                elseif LFP{i_lfp}.bad_intervals(indx,1) < starting && LFP{i_lfp}.bad_intervals(indx,2) > ending
+                    n_bad_intervals = [n_bad_intervals;1 ending-starting+1];
+                elseif (LFP{i_lfp}.bad_intervals(indx,1) >= starting && LFP{i_lfp}.bad_intervals(indx,1) <=ending) && LFP{i_lfp}.bad_intervals(indx,2) > ending
+                    n_bad_intervals = [n_bad_intervals;LFP{i_lfp}.bad_intervals(indx,1)-starting+1 ending-starting+1];
+                elseif LFP{i_lfp}.bad_intervals(indx,1) < starting && (LFP{i_lfp}.bad_intervals(indx,2) <= ending && LFP{i_lfp}.bad_intervals(indx,2) >= starting)
+                    n_bad_intervals = [n_bad_intervals;1 LFP{i_lfp}.bad_intervals(indx,2)-starting+1];
+                else
+                    ;
+                end
+                    n_bad_intervals
+            end
             LFP{i_lfp}.values = LFP{i_lfp}.values(starting:ending);
-            LFP{i_lfp}.timestamps = LFP{i_lfp}.timestamps(starting:ending);
-            LFP{i_lfp}.bad_intervals = [];
+            LFP{i_lfp}.timestamps = LFP{i_lfp}.timestamps(starting:ending); 
+            LFP{i_lfp}.bad_intervals = n_bad_intervals;
             LFP{i_lfp}.break_points = [];
+            n_bad_intervals = [];
                 for sub_ix = 1:length(LFP)
                     saveme = LFP{sub_ix};
                     new_name = [LFP{sub_ix}.name(1:end-4) '_' num2str(idx-1) '.mat'];
@@ -393,7 +410,8 @@ linked = 0;
                 hold on
                 plot(TS{sub_ix}(ixis(i-1):ixis(i)),badvals{sub_ix}(ixis(i-1):ixis(i)),'r')
                 hold on
-                      
+                plot(TS{sub_ix}(ixis(i-1):ixis(i)),brkpts{sub_ix}(ixis(i-1):ixis(i)),'g')
+                hold on      
                 xlabel('Time (s)')
              
         ylabel({['Ch ' num2str(LFP{sub_ix}.Channel)]; 'mV'})
@@ -417,6 +435,8 @@ linked = 0;
                 plot(TS{sub_ix}(ixis(i-1):ixis(i)),values{sub_ix}(ixis(i-1):ixis(i)),'b')
                 hold on
                 plot(TS{sub_ix}(ixis(i-1):ixis(i)),badvals{sub_ix}(ixis(i-1):ixis(i)),'r')
+                hold on
+                plot(TS{sub_ix}(ixis(i-1):ixis(i)),brkpts{sub_ix}(ixis(i-1):ixis(i)),'g')
                 hold on
                 xlabel('Time (s)')
              
