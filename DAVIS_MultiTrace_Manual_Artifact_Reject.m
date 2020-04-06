@@ -18,6 +18,7 @@ function[LFP] = DAVIS_MultiTrace_Manual_Artifact_Reject(LFP,window_size_sec,over
 %  will still be output.
 %  Mattenator 2016.
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
 LFP_fullpath = [];
 if nargin < 1 | isempty(LFP);
     
