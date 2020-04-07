@@ -1,4 +1,4 @@
-function[LFP] = DAVIS_MultiTrace_Manual_Artifact_Reject(LFP,window_size_sec,overwrite)
+function[LFP] = DAVIS_MultiTrace_Manual_Artifact_Reject(LFP,LFP_fullpath,window_size_sec,overwrite)
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % function[LFP] = DAVIS_Manual_Artifact_Reject(LFP,window_size_sec,overwrite)
 % LFP        - filename or LFP structure from DAVIS_Pre_Process. If left
@@ -19,7 +19,6 @@ function[LFP] = DAVIS_MultiTrace_Manual_Artifact_Reject(LFP,window_size_sec,over
 %  Mattenator 2016.
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-LFP_fullpath = [];
 if nargin < 1 | isempty(LFP);
     
     [LFP,LFP_fullpath] = uigetfile('*.mat','Select multiple LFP files with ctrl or shift','Multiselect','on');
@@ -160,49 +159,50 @@ t.ErrorFcn = @(~,~) beep
 start(t)
 linked = 0;
     function split_file(bf,~,interf)
-        t_val = LFP{i_lfp}.values;
-        t_timestamps = LFP{i_lfp}.timestamps;
-        t_break_points = LFP{i_lfp}.break_points;
-        t_bad_intervals = LFP{i_lfp}.bad_intervals;
-        starting = 1;
-        ending = 0;
-        n_bad_intervals = [];
-        for idx = 2:length(LFP{i_lfp}.break_points)+1
-            if idx == length(LFP{i_lfp}.break_points)+1
-                ending = length(LFP{i_lfp}.timestamps);
-            else
-                ending = LFP{i_lfp}.break_points(idx,1);
-            end
-            for indx = 1:length(LFP{i_lfp}.bad_intervals)
-                if LFP{i_lfp}.bad_intervals(indx,1) >= starting && LFP{i_lfp}.bad_intervals(indx,2) <= ending
-                    n_bad_intervals = [n_bad_intervals;LFP{i_lfp}.bad_intervals(indx,1)-starting+1 LFP{i_lfp}.bad_intervals(indx,2)-starting+1];
-                elseif LFP{i_lfp}.bad_intervals(indx,1) < starting && LFP{i_lfp}.bad_intervals(indx,2) > ending
-                    n_bad_intervals = [n_bad_intervals;1 ending-starting+1];
-                elseif (LFP{i_lfp}.bad_intervals(indx,1) >= starting && LFP{i_lfp}.bad_intervals(indx,1) <=ending) && LFP{i_lfp}.bad_intervals(indx,2) > ending
-                    n_bad_intervals = [n_bad_intervals;LFP{i_lfp}.bad_intervals(indx,1)-starting+1 ending-starting+1];
-                elseif LFP{i_lfp}.bad_intervals(indx,1) < starting && (LFP{i_lfp}.bad_intervals(indx,2) <= ending && LFP{i_lfp}.bad_intervals(indx,2) >= starting)
-                    n_bad_intervals = [n_bad_intervals;1 LFP{i_lfp}.bad_intervals(indx,2)-starting+1];
-                else
-                    ;
-                end
-     
-            end
-            LFP{i_lfp}.values = LFP{i_lfp}.values(starting:ending);
-            LFP{i_lfp}.timestamps = LFP{i_lfp}.timestamps(starting:ending); 
-            LFP{i_lfp}.bad_intervals = n_bad_intervals;
-            LFP{i_lfp}.break_points = [];
+        for i_lfp = 1:length(LFP)
+            t_val = LFP{i_lfp}.values;
+            t_timestamps = LFP{i_lfp}.timestamps;
+            t_break_points = LFP{i_lfp}.break_points;
+            t_bad_intervals = LFP{i_lfp}.bad_intervals;
+            starting = 1;
+            ending = 0;
             n_bad_intervals = [];
-                for sub_ix = 1:length(LFP)
-                    saveme = LFP{sub_ix};
-                    new_name = [LFP{sub_ix}.name(1:end-4) '_00' num2str(idx-1) '.mat'];
-                    save([LFP_fullpath new_name],'-struct','saveme')
+            for idx = 2:length(LFP{i_lfp}.break_points)+1
+                if idx == length(LFP{i_lfp}.break_points)+1
+                    ending = length(LFP{i_lfp}.timestamps);
+                else
+                    ending = LFP{i_lfp}.break_points(idx,1);
                 end
-            LFP{i_lfp}.values = t_val;
-            LFP{i_lfp}.timestamps = t_timestamps;
-            LFP{i_lfp}.bad_intervals = t_bad_intervals;
-            LFP{i_lfp}.break_points = t_break_points;
-            if idx <= length(LFP{i_lfp}.break_points)
-               starting = LFP{i_lfp}.break_points(idx,2);
+                %for indx = 1:length(LFP{i_lfp}.bad_intervals)
+                    %if LFP{i_lfp}.bad_intervals(indx,1) >= starting && LFP{i_lfp}.bad_intervals(indx,2) <= ending
+                    %    n_bad_intervals = [n_bad_intervals;LFP{i_lfp}.bad_intervals(indx,1)-starting+1 LFP{i_lfp}.bad_intervals(indx,2)-starting+1];
+                    %elseif LFP{i_lfp}.bad_intervals(indx,1) < starting && LFP{i_lfp}.bad_intervals(indx,2) > ending
+                    %    n_bad_intervals = [n_bad_intervals;1 ending-starting+1];
+                    %elseif (LFP{i_lfp}.bad_intervals(indx,1) >= starting && LFP{i_lfp}.bad_intervals(indx,1) <=ending) && LFP{i_lfp}.bad_intervals(indx,2) > ending
+                    %    n_bad_intervals = [n_bad_intervals;LFP{i_lfp}.bad_intervals(indx,1)-starting+1 ending-starting+1];
+                    %elseif LFP{i_lfp}.bad_intervals(indx,1) < starting && (LFP{i_lfp}.bad_intervals(indx,2) <= ending && LFP{i_lfp}.bad_intervals(indx,2) >= starting)
+                    %    n_bad_intervals = [n_bad_intervals;1 LFP{i_lfp}.bad_intervals(indx,2)-starting+1];
+                    %else
+                    %    ;
+                    %end
+
+                %end
+                LFP{i_lfp}.values = LFP{i_lfp}.values(starting:ending);
+                LFP{i_lfp}.timestamps = LFP{i_lfp}.timestamps(starting:ending); 
+                LFP{i_lfp}.bad_intervals = LFP{i_lfp}.bad_intervals;
+                LFP{i_lfp}.break_points = [];
+                n_bad_intervals = [];
+                saveme = LFP{i_lfp};
+                new_name = [LFP{i_lfp}.name(1:end-4) '_00' num2str(idx-1) '.mat'];
+                save([LFP_fullpath new_name],'-struct','saveme')
+                   
+                LFP{i_lfp}.values = t_val;
+                LFP{i_lfp}.timestamps = t_timestamps;
+                LFP{i_lfp}.bad_intervals = t_bad_intervals;
+                LFP{i_lfp}.break_points = t_break_points;
+                if idx <= length(LFP{i_lfp}.break_points)
+                   starting = LFP{i_lfp}.break_points(idx,2);
+                end
             end
         end
          msgbox('The file has been split.')
