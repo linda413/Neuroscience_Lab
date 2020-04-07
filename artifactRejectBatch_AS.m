@@ -25,7 +25,7 @@ session = 'BMD';
 animalPrefix = 'HM'; % Change the "A" if your animals are named differently!
 channels = [1,4,5,8,12,13,16] ;
 % Enter the number of seconds you would like to view per window
-numSec = 450;
+numSec = 1450;
 
 %% Loop through animals
 
