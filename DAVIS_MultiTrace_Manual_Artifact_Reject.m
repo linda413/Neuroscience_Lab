@@ -1,4 +1,4 @@
-function[LFP] = DAVIS_MultiTrace_Manual_Artifact_Reject(LFP,window_size_sec,overwrite)
+function[LFP] = DAVIS_MultiTrace_Manual_Artifact_Reject(LFP,LFP_fullpath,window_size_sec,overwrite)
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % function[LFP] = DAVIS_Manual_Artifact_Reject(LFP,window_size_sec,overwrite)
 % LFP        - filename or LFP structure from DAVIS_Pre_Process. If left
@@ -159,6 +159,7 @@ t.ErrorFcn = @(~,~) beep
 start(t)
 linked = 0;
     function split_file(bf,~,interf)
+        for i_lfp = 1:length(LFP)
         t_val = LFP{i_lfp}.values;
         t_timestamps = LFP{i_lfp}.timestamps;
         t_break_points = LFP{i_lfp}.break_points;
@@ -193,8 +194,13 @@ linked = 0;
             n_bad_intervals = [];
                 for sub_ix = 1:length(LFP)
                     saveme = LFP{sub_ix};
-                    new_name = [LFP{sub_ix}.name(1:end-4) '_00' num2str(idx-1) '.mat'];
-                    save([LFP_fullpath new_name],'-struct','saveme')
+                    if idx-1 == 1
+                        new_name = [LFP{sub_ix}.name(1:end-4) '.mat'];
+                        save([LFP_fullpath new_name],'-struct','saveme')
+                    else
+                        new_name = [LFP{sub_ix}.name(1:end-4) '_000' num2str(idx-2) '.mat'];
+                        save([LFP_fullpath new_name],'-struct','saveme')
+                    end         
                 end
             LFP{i_lfp}.values = t_val;
             LFP{i_lfp}.timestamps = t_timestamps;
@@ -205,7 +211,9 @@ linked = 0;
             end
         end
          msgbox('The file has been split.')
+        end
     end
+
     function set_breaks(bp,~,interf)
         figure(interf)
         old = hero == gca;
