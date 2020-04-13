@@ -14,11 +14,12 @@ clc; clear; close all;
 % Path for folder where the data is located (i.e. all the files to input)
 % If you would like to analyze multiple folders at a time, please enter the
 % directory where those folders are located.  
-dataDirectory = '/home/amschedl/Desktop/NOR/EEG Data/Epileptogenesis/';
+% dataDirectory = '/home/amschedl/Desktop/NOR/EEG Data/Epileptogenesis/';
+dataDirectory = '/Users/caiqi/Desktop/Neuroscience_Lab/';
 
 % Path for folder where the results will be saved
 %mainSaveDir = '/Users/amberschedlbauer/Dropbox/Gurkoff Lab/Code/Results/';
-saveDirectory = '/Volumes/SP PHD U3/AmberS/Converted Files/';
+saveDirectory = '/Users/caiqi/Desktop/Neuroscience_Lab/Converted Files/';
 
 % Enter either:
 %   1) channels you would like to analyze (Ex: 3 for CSC3.ncs)
@@ -26,10 +27,10 @@ saveDirectory = '/Volumes/SP PHD U3/AmberS/Converted Files/';
 %   2) the path and name of the MAT file that contains the varibale
 %      "fileInfo" (i.e. files2analyze_date.mat)
 %      Ex: channelsToAnalyze = '/Users/amberschedlbauer/files2analyze_4_2_18.mat';
-channelsToAnalyze = '/Users/amberschedlbauer/Dropbox/Gurkoff Lab/Results/files2analyze_4_2_18.mat';
+channelsToAnalyze = 1;
 
 % Prefix for the animal names (animals in this lab are usually labeled prefix + number, e.g. A54)
-animalPrefix = 'A'; 
+animalPrefix = 'HM'; 
 
 % The data are collected at 3200 Hz; this is plenty for theta analyses, so
 % we downsample to 1000 Hz to make analysis faster.
@@ -69,18 +70,19 @@ for iDir = 1:length(dirName)
     
     %%% Checks file size - Removes if too small %%%
     % Comment this out if it doesn't matter to you
-    removeIdx = [];
-    for iChan = 1:length(filesToAnalyze)
-        tempFile = dir([dataDirectory dirName{iDir} '/' filesToAnalyze{iChan}]);
-        if tempFile.bytes < 200000
-            removeIdx = [removeIdx iChan];
-        end
-    end
-    filesToAnalyze(removeIdx) = [];
-    filesToAnalyze = {filesToAnalyze.name};
+    %removeIdx = [];
+    %for iChan = 1:length(filesToAnalyze)
+    %    tempFile = dir([dataDirectory dirName{iDir} '/' filesToAnalyze{iChan}]);
+    %    if tempFile.bytes < 200000
+    %        removeIdx = [removeIdx iChan];
+    %    end
+    %end
+    %filesToAnalyze(removeIdx) = [];
+    %filesToAnalyze = {filesToAnalyze.name};
     
     %%%%%%%%%%%%%% Main function that converts the NCS files %%%%%%%%%%%%%%
     convertNCS2MAT_AS([dataDirectory dirName{iDir} '/'],saveDirectory,filesToAnalyze,newSamplingFrequency,[]);
+    %convertNCS2MAT_AS([dataDirectory],saveDirectory,filesToAnalyze,newSamplingFrequency,[]);
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     
 end
