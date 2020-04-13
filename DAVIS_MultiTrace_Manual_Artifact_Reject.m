@@ -192,16 +192,14 @@ linked = 0;
             LFP{i_lfp}.bad_intervals = n_bad_intervals;
             LFP{i_lfp}.break_points = [];
             n_bad_intervals = [];
-                for sub_ix = 1:length(LFP)
-                    saveme = LFP{sub_ix};
+                    saveme = LFP{i_lfp};
                     if idx-1 == 1
-                        new_name = [LFP{sub_ix}.name(1:end-4) '.mat'];
+                        new_name = [LFP{i_lfp}.name(1:end-4) '.mat'];
                         save([LFP_fullpath new_name],'-struct','saveme')
                     else
-                        new_name = [LFP{sub_ix}.name(1:end-4) '_000' num2str(idx-2) '.mat'];
+                        new_name = [LFP{i_lfp}.name(1:end-4) '_000' num2str(idx-2) '.mat'];
                         save([LFP_fullpath new_name],'-struct','saveme')
                     end         
-                end
             LFP{i_lfp}.values = t_val;
             LFP{i_lfp}.timestamps = t_timestamps;
             LFP{i_lfp}.bad_intervals = t_bad_intervals;
@@ -210,8 +208,8 @@ linked = 0;
                starting = LFP{i_lfp}.break_points(idx,2);
             end
         end
-         msgbox('The file has been split.')
-        end
+       end
+        msgbox('The file has been split.')
     end
 
     function set_breaks(bp,~,interf)
