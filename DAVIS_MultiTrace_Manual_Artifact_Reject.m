@@ -18,7 +18,7 @@ function[LFP] = DAVIS_MultiTrace_Manual_Artifact_Reject(LFP,LFP_fullpath,window_
 %  will still be output.
 %  Mattenator 2016.
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
+LFP_fullpath = [];
 if nargin < 1 | isempty(LFP);
     
     [LFP,LFP_fullpath] = uigetfile('*.mat','Select multiple LFP files with ctrl or shift','Multiselect','on');
@@ -183,7 +183,7 @@ linked = 0;
                 elseif LFP{i_lfp}.bad_intervals(indx,1) < starting && (LFP{i_lfp}.bad_intervals(indx,2) <= ending && LFP{i_lfp}.bad_intervals(indx,2) >= starting)
                     n_bad_intervals = [n_bad_intervals;1 LFP{i_lfp}.bad_intervals(indx,2)-starting+1];
                 else
-                    ending = LFP{i_lfp}.break_points(idx,1);
+                    ;
                 end
      
             end
