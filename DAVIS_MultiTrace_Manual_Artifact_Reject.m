@@ -173,7 +173,7 @@ linked = 0;
             else
                 ending = LFP{i_lfp}.break_points(idx,1);
             end
-            for indx = 1:length(LFP{i_lfp}.bad_intervals)
+            for indx = 1:size(LFP{i_lfp}.bad_intervals,1)
                 if LFP{i_lfp}.bad_intervals(indx,1) >= starting && LFP{i_lfp}.bad_intervals(indx,2) <= ending
                     n_bad_intervals = [n_bad_intervals;LFP{i_lfp}.bad_intervals(indx,1)-starting+1 LFP{i_lfp}.bad_intervals(indx,2)-starting+1];
                 elseif LFP{i_lfp}.bad_intervals(indx,1) < starting && LFP{i_lfp}.bad_intervals(indx,2) > ending
@@ -185,6 +185,7 @@ linked = 0;
                 else
                     ;
                 end
+               
      
             end
             LFP{i_lfp}.values = LFP{i_lfp}.values(starting:ending);
