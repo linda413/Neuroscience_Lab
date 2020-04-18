@@ -17,6 +17,14 @@ function[LFP] = DAVIS_MultiTrace_Manual_Artifact_Reject(LFP,LFP_fullpath,window_
 % overwrite the original file, or just end the program. The LFP structure
 %  will still be output.
 %  Mattenator 2016.
+%------------------------------------------------------------------------
+% Using file split function
+% select start and end point of the area WHERE THE GRAPH FLATLINES
+% like you would while selecting artifacts
+% Click split file to generate the files. WAIT till the done message pops
+% up.
+% If incorrect break points have been set, click reset breakpoints and save
+% it does not show the changes immediately until it is reloaded.
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 LFP_fullpath = [];
 if nargin < 1 | isempty(LFP);
@@ -151,6 +159,10 @@ bf = uicontrol('style','pushbutton');
 set(bf,'position',[362 1 120 20])
 set(bf,'string','Split File')
 set(bf,'callback',{@split_file,interf})
+rbp = uicontrol('style','pushbutton');
+set(rbp,'position',[483 21 120 20])
+set(rbp,'string','Reset Breakpoints')
+set(rbp,'callback',{@reset_bp,interf})
 t = timer;
 t.TimerFcn = @active_color
 t.ExecutionMode = 'fixedRate';
@@ -158,6 +170,13 @@ t.Period = .25;
 t.ErrorFcn = @(~,~) beep
 start(t)
 linked = 0;
+    
+    function reset_bp(rbp,~,interf)
+        for i_lfp = 1:length(LFP)
+            LFP{i_lfp}.break_points = [];
+        end
+    end
+    
     function split_file(bf,~,interf)
         for i_lfp = 1:length(LFP)
         t_val = LFP{i_lfp}.values;
