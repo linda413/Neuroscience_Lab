@@ -172,8 +172,8 @@ start(t)
 linked = 0;
     
     function reset_bp(rbp,~,interf)
-        for i_lfp = 1:length(LFP)
-            LFP{i_lfp}.break_points = [];
+        for sub_ix = 1:length(LFP)
+            LFP{sub_ix}.break_points = [1,2];
         end
     end
     
@@ -185,7 +185,7 @@ linked = 0;
         t_bad_intervals = LFP{i_lfp}.bad_intervals;
         starting = 1;
         ending = 0;
-        n_bad_intervals = [];
+        n_bad_intervals = [1,2];
         for idx = 2:length(LFP{i_lfp}.break_points)+1
             if idx == length(LFP{i_lfp}.break_points)+1
                 ending = length(LFP{i_lfp}.timestamps);
